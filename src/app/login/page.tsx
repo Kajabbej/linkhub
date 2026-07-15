@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { setSession } from "@/lib/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link as LinkIcon, Loader2, AlertCircle } from "lucide-react";
+import { Link as LinkIcon, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 // Form validation schema
 const loginSchema = zod.object({
@@ -41,6 +41,7 @@ const getBrowserAndDevice = () => {
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {
@@ -195,14 +196,24 @@ export default function LoginPage() {
                   Password
                 </Label>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                disabled={isLoading}
-                className="rounded-xl border-slate-200 bg-white px-3.5 py-5 text-sm shadow-xs transition-all focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black/10"
-                {...register("password")}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  disabled={isLoading}
+                  className="rounded-xl border-slate-200 bg-white pl-3.5 pr-10 py-5 text-sm shadow-xs transition-all focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black/10"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-hidden"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-xs font-medium text-red-500 mt-1">{errors.password.message}</p>
               )}
