@@ -30,3 +30,7 @@ CREATE INDEX IF NOT EXISTS idx_links_description ON links(description);
 CREATE INDEX IF NOT EXISTS idx_links_order_no ON links(order_no);
 CREATE INDEX IF NOT EXISTS idx_links_user_id ON links(user_id);
 
+-- 4. Add views_count column to profiles table for Visitor statistics
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS views_count INTEGER DEFAULT 0;
+
+

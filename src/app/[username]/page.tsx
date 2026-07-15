@@ -104,6 +104,16 @@ export default function UserBioLinkPage() {
 
         setProfile(profileData);
 
+        // Increment visitor views_count
+        const nextViews = (profileData.views_count || 0) + 1;
+        supabase
+          .from("profiles")
+          .update({ views_count: nextViews })
+          .eq("id", profileData.id)
+          .then(({ error }) => {
+            if (error) console.error("Gagal mengupdate views_count:", error);
+          });
+
         // Fetch active links ordered by order_no ascending
         const { data: linksData, error: linksError } = await supabase
           .from("links")

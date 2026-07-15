@@ -29,12 +29,14 @@ interface LinkItem {
   icon: string | null;
   is_active: boolean;
   order_no: number;
+  click_count?: number;
   created_at: string;
 }
 
 export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [links, setLinks] = useState<LinkItem[]>([]);
+  const [viewsCount, setViewsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [adminName, setAdminName] = useState("Admin");
 
@@ -54,6 +56,17 @@ export default function AdminDashboard() {
 
       if (error) throw error;
       setLinks(data || []);
+
+      // Fetch profile views_count
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("views_count")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profileData) {
+        setViewsCount(profileData.views_count || 0);
+      }
     } catch (err) {
       console.error("Gagal mengambil data link:", err);
     } finally {
@@ -86,13 +99,14 @@ export default function AdminDashboard() {
 
   const totalLinks = links.length;
   const activeLinks = links.filter(l => l.is_active).length;
+  const totalClicks = links.reduce((sum, link) => sum + (link.click_count || 0), 0);
+  const conversionRate = viewsCount > 0 ? ((totalClicks / viewsCount) * 100).toFixed(1) : "0.0";
 
-  // Stats dummy for visual representation (visitors and conversion will connect later)
   const stats = [
-    { title: "Total Visitor", value: "0", change: "0% dari kemarin", icon: Users },
-    { title: "Total Klik Link", value: "0", change: "0% dari kemarin", icon: MousePointerClick },
+    { title: "Total Visitor", value: viewsCount.toLocaleString(), change: "Pengunjung profil", icon: Users },
+    { title: "Total Klik Link", value: totalClicks.toLocaleString(), change: "Total klik semua link", icon: MousePointerClick },
     { title: "Total Link Aktif", value: activeLinks.toString(), change: `Dari total ${totalLinks} link`, icon: LinkIcon },
-    { title: "Conversion Rate", value: "0.0%", change: "0.0% dari kemarin", icon: TrendingUp },
+    { title: "Conversion Rate", value: `${conversionRate}%`, change: "Rasio klik vs pengunjung", icon: TrendingUp },
   ];
 
   return (
