@@ -50,18 +50,51 @@ export default function LoginPage() {
       if (session?.user?.email) {
         setIsLoading(true);
         try {
-          const { data, error } = await supabase
+          // Check if this Google email is in our users table
+          let { data, error } = await supabase
             .from("users")
             .select("id, name, email, role")
             .eq("email", session.user.email)
-            .single();
+            .maybeSingle();
             
-          if (error || !data || data.role !== "admin") {
-            setErrorMessage("Akun Google ini tidak memiliki akses Admin.");
-            await supabase.auth.signOut();
-            setIsLoading(false);
-            return;
+          // If user doesn't exist, automatically register them as admin
+          if (!data) {
+            const fullName = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+            const { data: newUser, error: insertError } = await supabase
+              .from("users")
+              .insert({
+                name: fullName,
+                email: session.user.email,
+                password: "oauth_google_generated",
+                role: "admin"
+              })
+              .select("id, name, email, role")
+              .single();
+              
+            if (insertError || !newUser) {
+              throw new Error("Gagal mendaftarkan user baru.");
+            }
+            data = newUser;
           }
+
+          // Record successful login in login_logs
+          let ipAddress = "127.0.0.1";
+          try {
+            const res = await fetch("https://api.ipify.org?format=json");
+            const ipData = await res.json();
+            ipAddress = ipData.ip;
+          } catch (e) {
+            console.warn("Gagal fetch IP address public, menggunakan fallback.");
+          }
+          const { browser, device } = getBrowserAndDevice();
+
+          await supabase.from("login_logs").insert({
+            email: session.user.email,
+            ip_address: ipAddress,
+            browser,
+            device,
+            status: "SUCCESS"
+          });
 
           setSession(data.id, data.email, data.name);
           router.push("/admin");
