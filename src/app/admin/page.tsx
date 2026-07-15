@@ -37,7 +37,14 @@ export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [viewsCount, setViewsCount] = useState(0);
-  const [dailyViews, setDailyViews] = useState<{ date: string; count: number }[]>([]);
+  const [dailyViews, setDailyViews] = useState<{ date: string; count: number }[]>(
+    Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString("id-ID", { month: "short", day: "numeric" });
+      return { date: label, count: 0 };
+    }).reverse()
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [adminName, setAdminName] = useState("Admin");
 
@@ -203,7 +210,7 @@ export default function AdminDashboard() {
             <CardTitle className="text-lg font-bold text-slate-800">Trafik Pengunjung (7 Hari Terakhir)</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] flex flex-col justify-between pt-4">
-            {dailyViews.length === 0 ? (
+            {isLoading ? (
               <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin mb-2" />
                 <p className="text-sm">Memuat data grafik...</p>
