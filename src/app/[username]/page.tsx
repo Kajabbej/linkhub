@@ -206,6 +206,47 @@ export default function UserBioLinkPage() {
     );
   }
 
+  // Helper functions to normalize social media links
+  const getWhatsAppUrl = (input: string) => {
+    if (!input) return "";
+    if (input.includes("wa.me") || input.includes("whatsapp.com")) {
+      return input.startsWith("http") ? input : `https://${input}`;
+    }
+    let clean = input.replace(/\D/g, "");
+    if (clean.startsWith("0")) {
+      clean = "62" + clean.slice(1);
+    } else if (clean.length > 0 && !clean.startsWith("62")) {
+      clean = "62" + clean;
+    }
+    return `https://wa.me/${clean}`;
+  };
+
+  const getInstagramUrl = (input: string) => {
+    if (!input) return "";
+    if (input.includes("instagram.com")) {
+      return input.startsWith("http") ? input : `https://${input}`;
+    }
+    const username = input.replace(/^@/, "");
+    return `https://instagram.com/${username}`;
+  };
+
+  const getTikTokUrl = (input: string) => {
+    if (!input) return "";
+    if (input.includes("tiktok.com")) {
+      return input.startsWith("http") ? input : `https://${input}`;
+    }
+    const username = input.replace(/^@/, "");
+    return `https://tiktok.com/@${username}`;
+  };
+
+  const getFacebookUrl = (input: string) => {
+    if (!input) return "";
+    if (input.includes("facebook.com")) {
+      return input.startsWith("http") ? input : `https://${input}`;
+    }
+    return `https://facebook.com/${input}`;
+  };
+
   // Animation variants for beautiful staggered entrances
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -382,7 +423,7 @@ export default function UserBioLinkPage() {
           >
             {profile.whatsapp_number && (
               <a 
-                href={`https://wa.me/${profile.whatsapp_number}`} 
+                href={getWhatsAppUrl(profile.whatsapp_number)} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center justify-center h-11 w-11 rounded-full bg-white/[0.03] border border-white/[0.08] text-[#25D366] hover:bg-[#25D366]/10 hover:border-[#25D366]/40 hover:scale-110 active:scale-95 shadow-md transition-all duration-300"
@@ -393,7 +434,7 @@ export default function UserBioLinkPage() {
             )}
             {profile.instagram_url && (
               <a 
-                href={`https://instagram.com/${profile.instagram_url}`} 
+                href={getInstagramUrl(profile.instagram_url)} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center justify-center h-11 w-11 rounded-full bg-white/[0.03] border border-white/[0.08] text-[#E1306C] hover:bg-[#E1306C]/10 hover:border-[#E1306C]/40 hover:scale-110 active:scale-95 shadow-md transition-all duration-300"
@@ -404,7 +445,7 @@ export default function UserBioLinkPage() {
             )}
             {profile.tiktok_url && (
               <a 
-                href={`https://tiktok.com/@${profile.tiktok_url}`} 
+                href={getTikTokUrl(profile.tiktok_url)} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center justify-center h-11 w-11 rounded-full bg-white/[0.03] border border-white/[0.08] text-white hover:bg-white/10 hover:border-white/30 hover:scale-110 active:scale-95 shadow-md transition-all duration-300"
@@ -415,7 +456,7 @@ export default function UserBioLinkPage() {
             )}
             {profile.facebook_url && (
               <a 
-                href={profile.facebook_url.startsWith("http") ? profile.facebook_url : `https://${profile.facebook_url}`} 
+                href={getFacebookUrl(profile.facebook_url)} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center justify-center h-11 w-11 rounded-full bg-white/[0.03] border border-white/[0.08] text-[#1877F2] hover:bg-[#1877F2]/10 hover:border-[#1877F2]/40 hover:scale-110 active:scale-95 shadow-md transition-all duration-300"
