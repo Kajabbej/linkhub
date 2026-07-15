@@ -37,6 +37,7 @@ export default function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [viewsCount, setViewsCount] = useState(0);
+  const [dailyViews, setDailyViews] = useState<{ date: string; count: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [adminName, setAdminName] = useState("Admin");
 
@@ -60,12 +61,48 @@ export default function AdminDashboard() {
       // Fetch profile views_count
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("views_count")
+        .select("id, views_count")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (profileData) {
         setViewsCount(profileData.views_count || 0);
+
+        // Fetch profile views log for the last 7 days
+        const { data: viewsLog, error: viewsError } = await supabase
+          .from("profile_views")
+          .select("viewed_at")
+          .eq("profile_id", profileData.id)
+          .order("viewed_at", { ascending: true });
+
+        // Build last 7 days keys
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return d.toISOString().split("T")[0];
+        }).reverse();
+
+        if (!viewsError && viewsLog) {
+          const grouped = last7Days.map(dateStr => {
+            const count = viewsLog.filter(view => {
+              const viewDateStr = new Date(view.viewed_at).toISOString().split("T")[0];
+              return viewDateStr === dateStr;
+            }).length;
+
+            const parsedDate = new Date(dateStr);
+            const label = parsedDate.toLocaleDateString("id-ID", { month: "short", day: "numeric" });
+            return { date: label, count };
+          });
+          setDailyViews(grouped);
+        } else {
+          // Fallback empty
+          const fallback = last7Days.map(dateStr => {
+            const parsedDate = new Date(dateStr);
+            const label = parsedDate.toLocaleDateString("id-ID", { month: "short", day: "numeric" });
+            return { date: label, count: 0 };
+          });
+          setDailyViews(fallback);
+        }
       }
     } catch (err) {
       console.error("Gagal mengambil data link:", err);
@@ -160,14 +197,55 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-7">
-        {/* Main Chart Area (Placeholder) */}
-        <Card className="md:col-span-2 lg:col-span-4 border-black/5 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg">Trafik Pengunjung (7 Hari Terakhir)</CardTitle>
+        {/* Main Chart Area */}
+        <Card className="md:col-span-2 lg:col-span-4 border-black/5 shadow-sm bg-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-bold text-slate-800">Trafik Pengunjung (7 Hari Terakhir)</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center flex-col gap-3 text-muted-foreground bg-slate-50/50 m-6 mt-0 rounded-xl border border-dashed border-slate-200">
-            <BarChart3 size={48} className="opacity-20" />
-            <p className="text-sm">Grafik interaktif akan muncul setelah koneksi Supabase.</p>
+          <CardContent className="h-[300px] flex flex-col justify-between pt-4">
+            {dailyViews.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                <p className="text-sm">Memuat data grafik...</p>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col justify-end">
+                {/* Y-axis helper values & Bars container */}
+                <div className="flex-1 flex items-end justify-between gap-2 px-2 pb-2 h-[200px] relative">
+                  {dailyViews.map((day, idx) => {
+                    const maxVal = Math.max(...dailyViews.map(d => d.count), 1);
+                    const percentage = (day.count / maxVal) * 100;
+                    return (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end relative">
+                        {/* Tooltip on hover */}
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] py-1 px-2 rounded-md absolute -top-8 shadow-lg pointer-events-none z-10 font-bold whitespace-nowrap">
+                          {day.count} pengunjung
+                        </div>
+                        
+                        {/* Dynamic Height Bar */}
+                        <motion.div 
+                          initial={{ height: 0 }}
+                          animate={{ height: `${Math.max(percentage, 5)}%` }}
+                          transition={{ duration: 0.8, delay: idx * 0.05, ease: "easeOut" }}
+                          className={`w-full max-w-[32px] rounded-t-lg bg-gradient-to-t from-violet-600 to-purple-500 group-hover:from-violet-500 group-hover:to-pink-500 shadow-[0_0_15px_rgba(124,58,237,0.15)] transition-all duration-300 relative flex justify-center`}
+                        >
+                          {day.count > 0 && (
+                            <span className="absolute -top-6 text-[10px] font-bold text-purple-600 group-hover:text-pink-600 transition-colors">
+                              {day.count}
+                            </span>
+                          )}
+                        </motion.div>
+                        
+                        {/* Day label */}
+                        <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-800 transition-colors">
+                          {day.date}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

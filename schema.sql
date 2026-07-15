@@ -33,4 +33,14 @@ CREATE INDEX IF NOT EXISTS idx_links_user_id ON links(user_id);
 -- 4. Add views_count column to profiles table for Visitor statistics
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS views_count INTEGER DEFAULT 0;
 
+-- 5. Tabel log untuk melacak trafik pengunjung harian (7 hari terakhir)
+CREATE TABLE IF NOT EXISTS profile_views (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  viewed_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Buat indeks agar query pencarian rentang tanggal lebih cepat
+CREATE INDEX IF NOT EXISTS idx_profile_views_profile_id_viewed_at ON profile_views(profile_id, viewed_at);
+
 

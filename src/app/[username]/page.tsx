@@ -114,6 +114,14 @@ export default function UserBioLinkPage() {
             if (error) console.error("Gagal mengupdate views_count:", error);
           });
 
+        // Insert log record to profile_views for daily traffic chart
+        supabase
+          .from("profile_views")
+          .insert({ profile_id: profileData.id })
+          .then(({ error }) => {
+            if (error) console.error("Gagal mencatat log pengunjung:", error);
+          });
+
         // Fetch active links ordered by order_no ascending
         const { data: linksData, error: linksError } = await supabase
           .from("links")
