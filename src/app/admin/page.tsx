@@ -82,21 +82,30 @@ export default function AdminDashboard() {
           .eq("profile_id", profileData.id)
           .order("viewed_at", { ascending: true });
 
-        // Build last 7 days keys
+        // Helper to format Date object into local YYYY-MM-DD
+        const getLocalDateString = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
+        // Build last 7 days keys in local timezone
         const last7Days = Array.from({ length: 7 }, (_, i) => {
           const d = new Date();
           d.setDate(d.getDate() - i);
-          return d.toISOString().split("T")[0];
+          return getLocalDateString(d);
         }).reverse();
 
         if (!viewsError && viewsLog) {
           const grouped = last7Days.map(dateStr => {
             const count = viewsLog.filter(view => {
-              const viewDateStr = new Date(view.viewed_at).toISOString().split("T")[0];
+              const viewDateStr = getLocalDateString(new Date(view.viewed_at));
               return viewDateStr === dateStr;
             }).length;
 
-            const parsedDate = new Date(dateStr);
+            const [year, month, day] = dateStr.split("-").map(Number);
+            const parsedDate = new Date(year, month - 1, day);
             const label = parsedDate.toLocaleDateString("id-ID", { month: "short", day: "numeric" });
             return { date: label, count };
           });
@@ -104,7 +113,8 @@ export default function AdminDashboard() {
         } else {
           // Fallback empty
           const fallback = last7Days.map(dateStr => {
-            const parsedDate = new Date(dateStr);
+            const [year, month, day] = dateStr.split("-").map(Number);
+            const parsedDate = new Date(year, month - 1, day);
             const label = parsedDate.toLocaleDateString("id-ID", { month: "short", day: "numeric" });
             return { date: label, count: 0 };
           });
