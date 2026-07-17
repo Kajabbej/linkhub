@@ -58,7 +58,7 @@ export default function AdminDashboard() {
 
       const { data, error } = await supabase
         .from("links")
-        .select("*")
+        .select("id, title, url, icon, is_active, order_no, click_count, created_at")
         .eq("user_id", user.id)
         .order("order_no", { ascending: true });
 
