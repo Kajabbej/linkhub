@@ -4,10 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import NextLink from "next/link";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Users, 
-  MousePointerClick, 
-  Link as LinkIcon, 
+import {
+  Users,
+  MousePointerClick,
+  Link as LinkIcon,
   TrendingUp,
   ArrowUpRight,
   ExternalLink,
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
     try {
       const user = getAdminUser();
       if (!user) return;
-      
+
       setAdminName(user.name);
 
       const { data, error } = await supabase
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Selamat pagi, {adminName} 👋</h1>
           <p className="text-muted-foreground mt-1">Berikut adalah performa LinkHub Anda hari ini.</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-black/90 hover:scale-[1.02] active:scale-[0.98]"
         >
@@ -238,9 +238,9 @@ export default function AdminDashboard() {
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] py-1 px-2 rounded-md absolute -top-8 shadow-lg pointer-events-none z-10 font-bold whitespace-nowrap">
                           {day.count} pengunjung
                         </div>
-                        
+
                         {/* Dynamic Height Bar */}
-                        <motion.div 
+                        <motion.div
                           initial={{ height: 0 }}
                           animate={{ height: `${Math.max(percentage, 5)}%` }}
                           transition={{ duration: 0.8, delay: idx * 0.05, ease: "easeOut" }}
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                             </span>
                           )}
                         </motion.div>
-                        
+
                         {/* Day label */}
                         <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-800 transition-colors">
                           {day.date}
@@ -281,7 +281,7 @@ export default function AdminDashboard() {
               <div className="flex h-[200px] flex-col items-center justify-center text-muted-foreground border border-dashed border-slate-200 rounded-xl">
                 <LinkIcon className="h-8 w-8 opacity-20 mb-2" />
                 <p className="text-sm">Belum ada link yang ditambahkan.</p>
-                <button 
+                <button
                   onClick={() => setIsModalOpen(true)}
                   className="mt-2 text-xs font-semibold text-black underline underline-offset-4 cursor-pointer"
                 >
@@ -300,7 +300,7 @@ export default function AdminDashboard() {
                         <p className="truncate text-sm font-medium text-slate-900">
                           {link.title}
                         </p>
-                        <a 
+                        <a
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center gap-2">
                       {/* Actions */}
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
+                        <button
                           onClick={() => handleDeleteLink(link.id)}
                           className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                         >
@@ -326,11 +326,11 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
-            
+
             <Separator className="my-5 opacity-50" />
-            
-            <NextLink 
-              href="/admin/links" 
+
+            <NextLink
+              href="/admin/links"
               className="block w-full text-center py-2 text-sm font-medium text-muted-foreground hover:text-black transition-colors rounded-lg hover:bg-black/5 cursor-pointer"
             >
               Lihat Semua Link
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Add Link Dialog Modal */}
-      <AddLinkModal 
+      <AddLinkModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchLinks}

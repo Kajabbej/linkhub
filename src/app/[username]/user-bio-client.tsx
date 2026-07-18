@@ -65,21 +65,45 @@ interface LinkItem {
 interface BannerItem {
   id: string;
   title: string;
+  subtitle: string | null;
   description: string | null;
-  image: string;
+  image_url: string | null;
+  image_alt: string;
+  background_type: "image" | "gradient" | "solid";
+  background_color: string;
+  gradient_from: string | null;
+  gradient_to: string | null;
+  image_position: "left" | "center" | "right";
+  overlay_opacity: number;
+  button_text: string | null;
+  button_url: string | null;
+  open_in_new_tab: boolean;
+  order_no: number;
+}
+
+interface BannerSettings {
+  autoplay: boolean;
+  interval: number;
+  transition: "fade" | "slide" | "zoom";
+  show_navigation: boolean;
+  show_indicator: boolean;
 }
 
 export function UserBioClient({
   profile,
   links: initialLinks,
   banners,
+  bannerSettings,
 }: {
   profile: Profile;
   links: LinkItem[];
   banners: BannerItem[];
+  bannerSettings: BannerSettings;
 }) {
   const [links, setLinks] = useState<LinkItem[]>(initialLinks);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [clickedBanners, setClickedBanners] = useState<Record<string, number>>({});
+
 
   // 1. Client-side analytical logging with server-side validation & LocalStorage throttling
   useEffect(() => {
@@ -123,14 +147,31 @@ export function UserBioClient({
     }
   }, [profile]);
 
-  // Autoplay banner carousel
+  // Autoplay banner carousel with custom settings
   useEffect(() => {
-    if (banners.length <= 1) return;
+    if (banners.length <= 1 || !bannerSettings.autoplay) return;
+    const intervalTime = (bannerSettings.interval || 5) * 1000;
     const interval = setInterval(() => {
       setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
-    }, 5000);
+    }, intervalTime);
     return () => clearInterval(interval);
-  }, [banners]);
+  }, [banners, bannerSettings]);
+
+  // Handle banner click tracking (rate limited to 3 seconds per banner)
+  const handleBannerClick = async (bannerId: string) => {
+    const now = Date.now();
+    const lastClicked = clickedBanners[bannerId] || 0;
+    if (now - lastClicked < 3000) return; // 3 seconds cooldown
+
+    setClickedBanners((prev) => ({ ...prev, [bannerId]: now }));
+
+    try {
+      await fetch(`/api/banners/${bannerId}/click`, { method: "POST" });
+    } catch (err) {
+      console.error("Gagal mengirim data klik banner ke server:", err);
+    }
+  };
+
 
   // Handle click stats registration
   const handleLinkClick = async (linkId: string) => {
@@ -431,68 +472,143 @@ export function UserBioClient({
         {banners.length > 0 && (
           <motion.div 
             variants={itemVariants}
-            className="relative w-full aspect-[21/9] rounded-2xl overflow-hidden mb-6 border border-white/[0.08] group shadow-[0_10px_30px_rgba(0,0,0,0.3)] bg-black/40"
+            className="relative w-full aspect-[21/9] md:aspect-[21/8] rounded-2xl overflow-hidden mb-6 border border-white/[0.08] group shadow-[0_10px_30px_rgba(0,0,0,0.35)] bg-slate-900"
           >
             <AnimatePresence mode="wait">
               <motion.div
                 key={banners[currentBannerIndex].id}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 15 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="absolute inset-0 w-full h-full"
+                exit={{ opacity: 0, x: -15 }}
+                transition={{ duration: 0.25 }}
+                style={
+                  banners[currentBannerIndex].background_type !== "image"
+                    ? banners[currentBannerIndex].background_type === "gradient"
+                      ? { backgroundImage: `linear-gradient(135deg, ${banners[currentBannerIndex].gradient_from || '#4F46E5'}, ${banners[currentBannerIndex].gradient_to || '#EC4899'})` }
+                      : { backgroundColor: banners[currentBannerIndex].background_color || '#0F172A' }
+                    : {}
+                }
+                className="absolute inset-0 w-full h-full flex flex-col md:flex-row overflow-hidden cursor-pointer select-none"
+                onClick={() => handleBannerClick(banners[currentBannerIndex].id)}
               >
-                <Image 
-                  src={banners[currentBannerIndex].image} 
-                  alt={banners[currentBannerIndex].title} 
-                  fill
-                  sizes="(max-w-768px) 100vw, 430px"
-                  unoptimized
-                  className="w-full h-full object-cover"
+                {/* Full Image Background for 'image' type */}
+                {banners[currentBannerIndex].background_type === "image" && banners[currentBannerIndex].image_url && (
+                  <Image 
+                    src={banners[currentBannerIndex].image_url} 
+                    alt={banners[currentBannerIndex].image_alt} 
+                    fill
+                    sizes="(max-w-768px) 100vw, 430px"
+                    priority
+                    className="w-full h-full object-cover"
+                  />
+                )}
+
+                {/* Semi-transparan Overlay */}
+                <div 
+                  style={{ backgroundColor: `rgba(0, 0, 0, ${(banners[currentBannerIndex].overlay_opacity || 0) / 100})` }}
+                  className="absolute inset-0 z-[1] transition-all"
                 />
-                
-                {/* Text overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10 flex flex-col justify-end p-3 text-left">
-                  <h4 className="text-xs font-bold text-white leading-tight">
+
+                {/* Desktop Split / Mobile Stack Cover Image for solid/gradient background */}
+                {banners[currentBannerIndex].background_type !== "image" && banners[currentBannerIndex].image_url && (
+                  <div 
+                    className={`relative z-[2] shrink-0 w-full md:w-[45%] h-[40%] md:h-full ${
+                      banners[currentBannerIndex].image_position === "left" 
+                        ? "order-first" 
+                        : banners[currentBannerIndex].image_position === "right" 
+                        ? "order-last" 
+                        : "hidden" // If center, don't show split
+                    }`}
+                  >
+                    <Image 
+                      src={banners[currentBannerIndex].image_url} 
+                      alt={banners[currentBannerIndex].image_alt} 
+                      fill
+                      sizes="(max-w-768px) 100vw, 200px"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Text Content Area */}
+                <div 
+                  className={`relative z-[2] flex-1 flex flex-col justify-center p-4 md:p-6 text-white ${
+                    banners[currentBannerIndex].background_type !== "image" && banners[currentBannerIndex].image_url && banners[currentBannerIndex].image_position !== "center"
+                      ? "h-[60%] md:h-full text-left items-start"
+                      : banners[currentBannerIndex].image_position === "left"
+                      ? "text-left items-start"
+                      : banners[currentBannerIndex].image_position === "right"
+                      ? "text-right items-end"
+                      : "text-center items-center"
+                  }`}
+                >
+                  {banners[currentBannerIndex].subtitle && (
+                    <span className="text-[9px] md:text-[10px] font-extrabold tracking-widest text-pink-400 uppercase drop-shadow-sm select-none">
+                      {banners[currentBannerIndex].subtitle}
+                    </span>
+                  )}
+                  
+                  <h4 className="text-sm md:text-base font-black mt-1 leading-tight drop-shadow-md select-none">
                     {banners[currentBannerIndex].title}
                   </h4>
+
                   {banners[currentBannerIndex].description && (
-                    <p className="text-[10px] text-slate-300 line-clamp-1 mt-0.5 font-light">
+                    <p className="text-[10px] md:text-xs text-white/95 line-clamp-2 md:line-clamp-3 mt-1.5 font-normal leading-relaxed max-w-md drop-shadow-sm select-none">
                       {banners[currentBannerIndex].description}
                     </p>
+                  )}
+
+                  {/* CTA Button */}
+                  {banners[currentBannerIndex].button_text && banners[currentBannerIndex].button_url && (
+                    <a
+                      href={banners[currentBannerIndex].button_url.startsWith("http") ? banners[currentBannerIndex].button_url : `https://${banners[currentBannerIndex].button_url}`}
+                      target={banners[currentBannerIndex].open_in_new_tab ? "_blank" : "_self"}
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        // Prevent bubbling to outer container click tracking
+                        e.stopPropagation();
+                        handleBannerClick(banners[currentBannerIndex].id);
+                      }}
+                      className="mt-3 md:mt-4 inline-flex items-center justify-center bg-white text-black font-extrabold text-[10px] md:text-xs px-4 md:px-5 py-2 rounded-full shadow hover:scale-105 active:scale-95 transition-all duration-200"
+                    >
+                      {banners[currentBannerIndex].button_text}
+                    </a>
                   )}
                 </div>
               </motion.div>
             </AnimatePresence>
 
             {/* Navigation buttons */}
-            {banners.length > 1 && (
+            {banners.length > 1 && bannerSettings.show_navigation && (
               <>
                 <button 
-                  onClick={prevBanner}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); prevBanner(); }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-black/45 border border-white/10 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/75 cursor-pointer shadow-md"
                 >
-                  <ChevronLeft size={14} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button 
-                  onClick={nextBanner}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-black/40 border border-white/10 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); nextBanner(); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 h-7 w-7 rounded-full bg-black/45 border border-white/10 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/75 cursor-pointer shadow-md"
                 >
-                  <ChevronRight size={14} />
+                  <ChevronRight size={16} />
                 </button>
-                
-                {/* Dots indicator */}
-                <div className="absolute bottom-2 right-3 flex items-center gap-1.5">
-                  {banners.map((_, i) => (
-                    <span 
-                      key={i} 
-                      className={`h-1.2 rounded-full transition-all duration-300 ${
-                        i === currentBannerIndex ? "w-3.5 bg-white" : "w-1.2 bg-white/40"
-                      }`}
-                    />
-                  ))}
-                </div>
               </>
+            )}
+
+            {/* Indicator Dots */}
+            {banners.length > 1 && bannerSettings.show_indicator && (
+              <div className="absolute bottom-2.5 right-3.5 z-10 flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded-full backdrop-blur-xs border border-white/5">
+                {banners.map((_, i) => (
+                  <button 
+                    key={i}
+                    onClick={(e) => { e.stopPropagation(); setCurrentBannerIndex(i); }}
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                      i === currentBannerIndex ? "w-4 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"
+                    }`}
+                  />
+                ))}
+              </div>
             )}
           </motion.div>
         )}

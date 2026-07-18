@@ -74,21 +74,43 @@ export default async function UserBioLinkPage({ params }: PageProps) {
     console.error("Gagal memuat link dari server:", linksError);
   }
 
-  // 3. Fetch Active Banners on the server with optimized columns selection
+  // 3. Fetch Active Banners on the server with optimized columns selection and user_id filtering
   const { data: banners, error: bannersError } = await supabase
     .from("banners")
-    .select("id, title, description, image, is_active")
-    .eq("is_active", true);
+    .select("id, title, subtitle, description, image_url, image_alt, background_type, background_color, gradient_from, gradient_to, image_position, overlay_opacity, button_text, button_url, open_in_new_tab, order_no")
+    .eq("user_id", profile.user_id)
+    .eq("is_active", true)
+    .order("order_no", { ascending: true });
 
   if (bannersError) {
     console.error("Gagal memuat banner dari server:", bannersError);
   }
+
+  // 4. Fetch Global Banner Settings on the server
+  const { data: bannerSettings, error: settingsError } = await supabase
+    .from("banner_settings")
+    .select("autoplay, interval, transition, show_navigation, show_indicator")
+    .eq("user_id", profile.user_id)
+    .maybeSingle();
+
+  if (settingsError) {
+    console.error("Gagal memuat pengaturan banner dari server:", settingsError);
+  }
+
+  const defaultSettings = {
+    autoplay: true,
+    interval: 5,
+    transition: "fade" as const,
+    show_navigation: true,
+    show_indicator: true
+  };
 
   return (
     <UserBioClient
       profile={profile}
       links={links || []}
       banners={banners || []}
+      bannerSettings={bannerSettings || defaultSettings}
     />
   );
 }
