@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getAdminUser, clearSession } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { name: "Home", href: "/admin", icon: LayoutDashboard },
@@ -37,7 +38,12 @@ export function Sidebar() {
     setUser(getAdminUser());
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Gagal melakukan sign out dari Supabase:", err);
+    }
     clearSession();
     router.push("/login");
     router.refresh();
