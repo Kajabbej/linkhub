@@ -2,17 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import NextLink from "next/link";
-import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
   MousePointerClick,
   Link as LinkIcon,
   TrendingUp,
-  ArrowUpRight,
   ExternalLink,
-  Edit2,
-  BarChart3,
   Loader2,
   Trash2
 } from "lucide-react";
@@ -21,6 +17,9 @@ import { AddLinkModal } from "@/components/admin/add-link-modal";
 import { supabase } from "@/lib/supabase";
 import { getAdminUser } from "@/lib/auth";
 import { DynamicIcon } from "@/components/admin/dynamic-icon";
+import { DashboardContainer, DashboardItem } from "@/components/dashboard/dashboard-animation";
+import { StatCounter } from "@/components/dashboard/stat-counter";
+import { motion } from "framer-motion";
 
 interface LinkItem {
   id: string;
@@ -157,42 +156,34 @@ export default function AdminDashboard() {
   const conversionRate = viewsCount > 0 ? ((totalClicks / viewsCount) * 100).toFixed(1) : "0.0";
 
   const stats = [
-    { title: "Total Visitor", value: viewsCount.toLocaleString(), change: "Pengunjung profil", icon: Users },
-    { title: "Total Klik Link", value: totalClicks.toLocaleString(), change: "Total klik semua link", icon: MousePointerClick },
-    { title: "Total Link Aktif", value: activeLinks.toString(), change: `Dari total ${totalLinks} link`, icon: LinkIcon },
+    { title: "Total Visitor", value: viewsCount, change: "Pengunjung profil", icon: Users },
+    { title: "Total Klik Link", value: totalClicks, change: "Total klik semua link", icon: MousePointerClick },
+    { title: "Total Link Aktif", value: activeLinks, change: `Dari total ${totalLinks} link`, icon: LinkIcon },
     { title: "Conversion Rate", value: `${conversionRate}%`, change: "Rasio klik vs pengunjung", icon: TrendingUp },
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="space-y-8 pb-8"
-    >
+    <DashboardContainer className="space-y-8 pb-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Selamat pagi, {adminName} 👋</h1>
-          <p className="text-muted-foreground mt-1">Berikut adalah performa LinkHub Anda hari ini.</p>
+      <DashboardItem>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Selamat pagi, {adminName} 👋</h1>
+            <p className="text-muted-foreground mt-1">Berikut adalah performa LinkHub Anda hari ini.</p>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-black/90 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            + Tambah Link Baru
+          </button>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-black/90 hover:scale-[1.02] active:scale-[0.98]"
-        >
-          + Tambah Link Baru
-        </button>
-      </div>
+      </DashboardItem>
 
       {/* Quick Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, i) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: i * 0.1 }}
-          >
+        {stats.map((stat) => (
+          <DashboardItem key={stat.title}>
             <Card className="border-black/5 shadow-sm bg-white/60 backdrop-blur-xl">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -203,140 +194,146 @@ export default function AdminDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-2xl font-bold">
+                  <StatCounter value={stat.value} />
+                </div>
                 <p className="text-xs text-muted-foreground font-medium mt-1 flex items-center gap-1">
                   {stat.change}
                 </p>
               </CardContent>
             </Card>
-          </motion.div>
+          </DashboardItem>
         ))}
       </div>
 
       <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-7">
         {/* Main Chart Area */}
-        <Card className="md:col-span-2 lg:col-span-4 border-black/5 shadow-sm bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold text-slate-800">Trafik Pengunjung (7 Hari Terakhir)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex flex-col justify-between pt-4">
-            {isLoading ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
-                <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                <p className="text-sm">Memuat data grafik...</p>
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col justify-end">
-                {/* Y-axis helper values & Bars container */}
-                <div className="flex-1 flex items-end justify-between gap-2 px-2 pb-2 h-[200px] relative">
-                  {dailyViews.map((day, idx) => {
-                    const maxVal = Math.max(...dailyViews.map(d => d.count), 1);
-                    const percentage = (day.count / maxVal) * 100;
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end relative">
-                        {/* Tooltip on hover */}
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] py-1 px-2 rounded-md absolute -top-8 shadow-lg pointer-events-none z-10 font-bold whitespace-nowrap">
-                          {day.count} pengunjung
-                        </div>
-
-                        {/* Dynamic Height Bar */}
-                        <motion.div
-                          initial={{ height: 0 }}
-                          animate={{ height: `${Math.max(percentage, 5)}%` }}
-                          transition={{ duration: 0.8, delay: idx * 0.05, ease: "easeOut" }}
-                          className={`w-full max-w-[32px] rounded-t-lg bg-gradient-to-t from-violet-600 to-purple-500 group-hover:from-violet-500 group-hover:to-pink-500 shadow-[0_0_15px_rgba(124,58,237,0.15)] transition-all duration-300 relative flex justify-center`}
-                        >
-                          {day.count > 0 && (
-                            <span className="absolute -top-6 text-[10px] font-bold text-purple-600 group-hover:text-pink-600 transition-colors">
-                              {day.count}
-                            </span>
-                          )}
-                        </motion.div>
-
-                        {/* Day label */}
-                        <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-800 transition-colors">
-                          {day.date}
-                        </span>
-                      </div>
-                    );
-                  })}
+        <DashboardItem className="md:col-span-2 lg:col-span-4 h-full">
+          <Card className="border-black/5 shadow-sm bg-white h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-slate-800">Trafik Pengunjung (7 Hari Terakhir)</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px] flex flex-col justify-between pt-4">
+              {isLoading ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                  <p className="text-sm">Memuat data grafik...</p>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="flex-1 flex flex-col justify-end">
+                  {/* Y-axis helper values & Bars container */}
+                  <div className="flex-1 flex items-end justify-between gap-2 px-2 pb-2 h-[200px] relative">
+                    {dailyViews.map((day, idx) => {
+                      const maxVal = Math.max(...dailyViews.map(d => d.count), 1);
+                      const percentage = (day.count / maxVal) * 100;
+                      return (
+                        <div key={idx} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end relative">
+                          {/* Tooltip on hover */}
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] py-1 px-2 rounded-md absolute -top-8 shadow-lg pointer-events-none z-10 font-bold whitespace-nowrap">
+                            {day.count} pengunjung
+                          </div>
+
+                          {/* Dynamic Height Bar */}
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${Math.max(percentage, 5)}%` }}
+                            transition={{ duration: 0.8, delay: idx * 0.05, ease: "easeOut" }}
+                            className={`w-full max-w-[32px] rounded-t-lg bg-gradient-to-t from-violet-600 to-purple-500 group-hover:from-violet-500 group-hover:to-pink-500 shadow-[0_0_15px_rgba(124,58,237,0.15)] transition-all duration-300 relative flex justify-center`}
+                          >
+                            {day.count > 0 && (
+                              <span className="absolute -top-6 text-[10px] font-bold text-purple-600 group-hover:text-pink-600 transition-colors">
+                                {day.count}
+                              </span>
+                            )}
+                          </motion.div>
+
+                          {/* Day label */}
+                          <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-800 transition-colors">
+                            {day.date}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </DashboardItem>
 
         {/* Top Performing Links */}
-        <Card className="md:col-span-1 lg:col-span-3 border-black/5 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg">Daftar Link Anda</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex h-[200px] flex-col items-center justify-center text-muted-foreground">
-                <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                <p className="text-sm">Memuat daftar link...</p>
-              </div>
-            ) : links.length === 0 ? (
-              <div className="flex h-[200px] flex-col items-center justify-center text-muted-foreground border border-dashed border-slate-200 rounded-xl">
-                <LinkIcon className="h-8 w-8 opacity-20 mb-2" />
-                <p className="text-sm">Belum ada link yang ditambahkan.</p>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="mt-2 text-xs font-semibold text-black underline underline-offset-4 cursor-pointer"
-                >
-                  Tambah link sekarang
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-5 max-h-[300px] overflow-y-auto pr-1">
-                {links.map((link) => (
-                  <div key={link.id} className="group flex items-center justify-between">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/5 text-black">
-                        <DynamicIcon name={link.icon || "Link"} size={18} />
+        <DashboardItem className="md:col-span-1 lg:col-span-3 h-full">
+          <Card className="border-black/5 shadow-sm h-full bg-white">
+            <CardHeader>
+              <CardTitle className="text-lg">Daftar Link Anda</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex h-[200px] flex-col items-center justify-center text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                  <p className="text-sm">Memuat daftar link...</p>
+                </div>
+              ) : links.length === 0 ? (
+                <div className="flex h-[200px] flex-col items-center justify-center text-muted-foreground border border-dashed border-slate-200 rounded-xl">
+                  <LinkIcon className="h-8 w-8 opacity-20 mb-2" />
+                  <p className="text-sm">Belum ada link yang ditambahkan.</p>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="mt-2 text-xs font-semibold text-black underline underline-offset-4 cursor-pointer"
+                  >
+                    Tambah link sekarang
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-5 max-h-[300px] overflow-y-auto pr-1">
+                  {links.map((link) => (
+                    <div key={link.id} className="group flex items-center justify-between">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/5 text-black">
+                          <DynamicIcon name={link.icon || "Link"} size={18} />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="truncate text-sm font-medium text-slate-900">
+                            {link.title}
+                          </p>
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground flex items-center gap-1 hover:text-black transition-colors truncate"
+                          >
+                            {link.url}
+                            <ExternalLink size={10} />
+                          </a>
+                        </div>
                       </div>
-                      <div className="overflow-hidden">
-                        <p className="truncate text-sm font-medium text-slate-900">
-                          {link.title}
-                        </p>
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-muted-foreground flex items-center gap-1 hover:text-black transition-colors truncate"
-                        >
-                          {link.url}
-                          <ExternalLink size={10} />
-                        </a>
+                      <div className="flex items-center gap-2">
+                        {/* Actions */}
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleDeleteLink(link.id)}
+                            className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {/* Actions */}
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleDeleteLink(link.id)}
-                          className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
-            <Separator className="my-5 opacity-50" />
+              <Separator className="my-5 opacity-50" />
 
-            <NextLink
-              href="/admin/links"
-              className="block w-full text-center py-2 text-sm font-medium text-muted-foreground hover:text-black transition-colors rounded-lg hover:bg-black/5 cursor-pointer"
-            >
-              Lihat Semua Link
-            </NextLink>
-          </CardContent>
-        </Card>
+              <NextLink
+                href="/admin/links"
+                className="block w-full text-center py-2 text-sm font-medium text-muted-foreground hover:text-black transition-colors rounded-lg hover:bg-black/5 cursor-pointer"
+              >
+                Lihat Semua Link
+              </NextLink>
+            </CardContent>
+          </Card>
+        </DashboardItem>
       </div>
 
       {/* Add Link Dialog Modal */}
@@ -345,6 +342,6 @@ export default function AdminDashboard() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchLinks}
       />
-    </motion.div>
+    </DashboardContainer>
   );
 }

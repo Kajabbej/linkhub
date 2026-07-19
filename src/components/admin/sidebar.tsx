@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { motion, useReducedMotion, Variants } from "framer-motion";
+import { Logo } from "@/components/shared/logo";
 import {
   LayoutDashboard,
   User,
@@ -12,7 +14,7 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 import { useRouter } from "next/navigation";
@@ -32,6 +34,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   useEffect(() => {
@@ -49,15 +52,29 @@ export function Sidebar() {
     router.refresh();
   };
 
+  const sidebarVariants: Variants = {
+    hidden: { 
+      opacity: 0, 
+      x: shouldReduceMotion ? 0 : -20 
+    },
+    visible: { 
+      opacity: 1, 
+      x: 0, 
+      transition: { duration: 0.25, ease: "easeOut" } 
+    }
+  };
+
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-white/50 backdrop-blur-xl">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={sidebarVariants}
+      className="flex h-full w-64 flex-col border-r bg-white/50 backdrop-blur-xl transform-gpu"
+    >
       {/* Brand */}
       <div className="flex h-16 items-center px-6">
-        <Link href="/admin" className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
-            <LinkIcon size={18} strokeWidth={2.5} />
-          </div>
-          LinkHub
+        <Link href="/admin">
+          <Logo id="sidebar-logo" size={32} showText={true} />
         </Link>
       </div>
 
@@ -107,6 +124,6 @@ export function Sidebar() {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
