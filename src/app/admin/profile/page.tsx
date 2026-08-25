@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +21,9 @@ import {
   Link as LinkIcon,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  Trash2,
+  ImageIcon
 } from "lucide-react";
 
 // Custom inline SVG icons matching premium Flaticon style with official colors
@@ -110,10 +113,38 @@ interface UserLink {
   is_active: boolean;
 }
 
+// --- Helper: compress image via Canvas → Blob ---
+function compressImageToBlob(
+  file: File,
+  opts: { maxWidth: number; maxHeight: number; quality: number }
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const ratio = Math.min(opts.maxWidth / img.width, opts.maxHeight / img.height, 1);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas context unavailable"));
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Compression failed"))),
+        "image/jpeg",
+        opts.quality
+      );
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [avatarBase64, setAvatarBase64] = useState<string>("");
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [userLinks, setUserLinks] = useState<UserLink[]>([]);
@@ -183,6 +214,9 @@ export default function ProfilePage() {
         setValue("facebook_url", profile.facebook_url || "");
         if (profile.avatar_url) {
           setAvatarBase64(profile.avatar_url);
+        }
+        if (profile.cover_url) {
+          setCoverUrl(profile.cover_url);
         }
       } else {
         // Fallback default values
@@ -256,6 +290,72 @@ export default function ProfilePage() {
     }
   };
 
+  // Handle cover upload: validate → compress → upload to Supabase Storage → save URL
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage("File harus berupa gambar.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMessage("Ukuran file sampul maksimal 10MB.");
+      return;
+    }
+
+    setIsUploadingCover(true);
+    setErrorMessage(null);
+    try {
+      const blob = await compressImageToBlob(file, { maxWidth: 1000, maxHeight: 400, quality: 0.8 });
+
+      // Gunakan Supabase Auth UID (auth.uid()) untuk path — harus cocok dengan RLS policy
+      const { data: { session } } = await supabase.auth.getSession();
+      const authUid = session?.user?.id;
+      if (!authUid) throw new Error("Sesi Google tidak ditemukan. Coba login ulang.");
+
+      const filePath = `${authUid}/cover-${Date.now()}.jpg`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("covers")
+        .upload(filePath, blob, { contentType: "image/jpeg", upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("covers").getPublicUrl(filePath);
+      setCoverUrl(data.publicUrl);
+    } catch (err: unknown) {
+      console.error("Gagal mengunggah foto sampul:", err);
+      setErrorMessage("Gagal mengunggah foto sampul. Coba lagi.");
+    } finally {
+      setIsUploadingCover(false);
+      // reset input value so user can re-upload same file
+      e.target.value = "";
+    }
+  };
+
+  // Handle cover delete: remove from Storage bucket + set null in DB
+  const handleDeleteCover = async () => {
+    if (!coverUrl || !userId) return;
+    setIsUploadingCover(true);
+    try {
+      // Extract path from public URL (everything after /public/covers/)
+      const pathMatch = coverUrl.match(/public\/covers\/(.+)/);
+      if (pathMatch?.[1]) {
+        await supabase.storage.from("covers").remove([decodeURIComponent(pathMatch[1])]);
+      }
+      setCoverUrl(null);
+      // Immediately persist null to DB
+      if (userId) {
+        await supabase.from("profiles").update({ cover_url: null }).eq("user_id", userId);
+      }
+    } catch (err) {
+      console.error("Gagal menghapus foto sampul:", err);
+    } finally {
+      setIsUploadingCover(false);
+    }
+  };
+
   const onSubmit = async (values: ProfileFormValues) => {
     if (!userId) return;
     setIsSaving(true);
@@ -269,6 +369,7 @@ export default function ProfilePage() {
         fullname: values.fullname,
         bio: values.bio || null,
         avatar_url: avatarBase64 || null,
+        cover_url: coverUrl,
         whatsapp_number: values.whatsapp_number || null,
         location: values.location || null,
         instagram_url: values.instagram_url || null,
@@ -370,9 +471,53 @@ export default function ProfilePage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <Card className="border-black/5 shadow-md bg-white">
             <CardContent className="pt-6 space-y-6">
-              
+
+              {/* Cover Photo Upload */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                  <ImageIcon size={15} />
+                  Foto Sampul
+                </h3>
+                <div className="relative w-full aspect-[21/8] rounded-xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 group">
+                  {coverUrl ? (
+                    <Image
+                      src={coverUrl}
+                      alt="Cover Preview"
+                      fill
+                      sizes="600px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-slate-400">
+                      <ImageIcon size={28} className="opacity-40" />
+                      <span className="text-xs">Belum ada foto sampul</span>
+                    </div>
+                  )}
+                  {/* Overlay controls */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 shadow-sm">
+                      {isUploadingCover ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                      {isUploadingCover ? "Mengunggah..." : "Unggah Sampul"}
+                      <input type="file" accept="image/*" onChange={handleCoverChange} className="hidden" disabled={isUploadingCover} />
+                    </label>
+                    {coverUrl && (
+                      <button
+                        type="button"
+                        onClick={handleDeleteCover}
+                        disabled={isUploadingCover}
+                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 shadow-sm disabled:opacity-50"
+                      >
+                        <Trash2 size={12} />
+                        Hapus
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">Gambar akan dikompresi ke ukuran optimal (~1000×400px). Maks 10MB.</p>
+              </div>
+
               {/* Avatar Upload */}
-              <div className="flex items-center gap-6 pb-2">
+              <div className="flex items-center gap-6 pb-2 border-t border-slate-100 pt-4">
                 <div className="relative group flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 border border-slate-200">
                   {avatarBase64 ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -585,13 +730,31 @@ export default function ProfilePage() {
             <div className="absolute top-2 left-1/2 h-4 w-24 -translate-x-1/2 rounded-full bg-slate-900 z-30" />
             
             {/* Screen Content */}
-            <div className="h-full w-full overflow-y-auto px-4 py-6 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#122239] to-slate-950 text-white flex flex-col items-center justify-between text-center select-none">
-              
-              {/* Floating Glassmorphic Card Container */}
-              <div className="relative w-full mt-12 px-3 pt-12 pb-4 rounded-[28px] bg-white/5 backdrop-blur-xl border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col items-center justify-start text-center">
+            <div className="h-full w-full overflow-y-auto bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#122239] to-slate-950 text-white flex flex-col items-center justify-between text-center select-none">
+
+              {/* Cover Photo Mockup */}
+              <div className="relative w-full h-[90px] shrink-0 overflow-hidden">
+                {coverUrl ? (
+                  <Image
+                    src={coverUrl}
+                    alt="Cover Mockup"
+                    fill
+                    sizes="295px"
+                    className="object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50" />
+                )}
+                {/* Dark gradient fade at bottom for avatar overlap */}
+                <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-slate-900/80 to-transparent" />
+              </div>
+
+              {/* Floating Glassmorphic Card Container — starts below cover */}
+              <div className="relative w-full mx-0 px-3 pt-10 pb-4 -mt-6 rounded-t-[28px] bg-white/5 backdrop-blur-xl border-t border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col items-center justify-start text-center flex-1">
                 
                 {/* Overlapping Avatar Container */}
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 p-1.5 rounded-full border border-white/10 bg-slate-950/90 backdrop-blur-md shadow-[0_0_20px_rgba(168,85,247,0.25)]">
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 p-1.5 rounded-full border border-white/10 bg-slate-950/90 backdrop-blur-md shadow-[0_0_20px_rgba(168,85,247,0.25)]">
                   {/* Concentric rings */}
                   <div className="absolute inset-0 rounded-full border border-purple-500/20 animate-pulse pointer-events-none" />
                   <div className="relative h-16 w-16 overflow-hidden rounded-full border border-white/15 bg-slate-800 flex items-center justify-center">

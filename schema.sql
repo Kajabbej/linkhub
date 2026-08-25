@@ -1,5 +1,9 @@
 -- RUN THIS IN THE SUPABASE SQL EDITOR TO UPDATE THE SCHEMA FOR MVP V1.0
 
+-- 0. Tambah kolom cover_url ke tabel profiles (URL foto sampul dari Supabase Storage)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS cover_url TEXT;
+
+
 -- 1. Add missing columns to the links table
 ALTER TABLE links 
 ADD COLUMN IF NOT EXISTS description VARCHAR(255),

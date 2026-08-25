@@ -43,6 +43,7 @@ interface Profile {
   fullname: string;
   bio: string | null;
   avatar_url: string | null;
+  cover_url: string | null;
   whatsapp_number: string | null;
   location: string | null;
   instagram_url: string | null;
@@ -299,7 +300,7 @@ export function UserBioClient({
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#090d16] text-white px-4 py-20 flex flex-col items-center justify-between font-sans">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#090d16] text-white flex flex-col items-center justify-between font-sans">
       
       {/* Dynamic Animated Background Mesh Blobs */}
       <div className="absolute inset-0 overflow-hidden -z-20 pointer-events-none">
@@ -344,12 +345,30 @@ export function UserBioClient({
         />
       </div>
 
+      {/* Cover Photo — full width, sits above the card */}
+      {profile.cover_url && (
+        <div className="relative w-full max-w-[430px] h-[160px] md:h-[200px] overflow-hidden rounded-b-[32px] shrink-0">
+          <Image
+            src={profile.cover_url}
+            alt={`Foto sampul ${profile.username}`}
+            fill
+            sizes="430px"
+            priority
+            className="object-cover"
+          />
+          {/* Bottom fade for smooth card overlap */}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#090d16] to-transparent" />
+        </div>
+      )}
+
       {/* Main Glassmorphic Card Container */}
       <motion.div 
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="relative w-full max-w-[430px] mt-16 px-6 pt-24 pb-8 rounded-[36px] bg-white/[0.02] backdrop-blur-3xl border border-white/[0.08] shadow-[0_30px_70px_rgba(0,0,0,0.5)] flex flex-col items-center justify-start text-center"
+        className={`relative w-full max-w-[430px] px-6 pt-24 pb-8 rounded-[36px] bg-white/[0.02] backdrop-blur-3xl border border-white/[0.08] shadow-[0_30px_70px_rgba(0,0,0,0.5)] flex flex-col items-center justify-start text-center ${
+          profile.cover_url ? "-mt-12" : "mt-16"
+        }`}
       >
         {/* Overlapping Avatar Container */}
         <motion.div 

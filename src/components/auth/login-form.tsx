@@ -35,7 +35,7 @@ const getBrowserAndDevice = () => {
 
   if (/Android/i.test(ua)) device = "Android";
   else if (/iPhone|iPad/i.test(ua)) device = "iOS";
-  
+
   return { browser, device };
 };
 
@@ -45,7 +45,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
+
   // Shake animation trigger state
   const [shake, setShake] = useState(false);
 
@@ -80,7 +80,7 @@ export function LoginForm() {
             .select("id, name, email, role")
             .eq("email", session.user.email)
             .maybeSingle();
-            
+
           if (!data) {
             const fullName = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
             const { data: newUser, error: insertError } = await supabase
@@ -93,7 +93,7 @@ export function LoginForm() {
               })
               .select("id, name, email, role")
               .single();
-              
+
             if (insertError || !newUser) {
               throw new Error("Gagal mendaftarkan user baru.");
             }
@@ -133,13 +133,13 @@ export function LoginForm() {
       }
     };
     checkOAuthSession();
-    
+
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         checkOAuthSession();
       }
     });
-    
+
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -195,7 +195,7 @@ export function LoginForm() {
       if (error || !data) {
         triggerShake();
         setErrorMessage("Email atau password salah.");
-        
+
         await supabase.from("login_logs").insert({
           email: values.email,
           ip_address: ipAddress,
@@ -203,9 +203,9 @@ export function LoginForm() {
           device,
           status: "FAILED"
         });
-        
+
         setIsLoading(false);
-        
+
         // Auto focus password field if email seems fine, or email otherwise
         setTimeout(() => {
           setFocus("password");
@@ -216,7 +216,7 @@ export function LoginForm() {
       if (data.role !== "admin") {
         triggerShake();
         setErrorMessage("Akses ditolak. Anda bukan Admin.");
-        
+
         await supabase.from("login_logs").insert({
           user_id: data.id,
           email: values.email,
@@ -225,7 +225,7 @@ export function LoginForm() {
           device,
           status: "FAILED"
         });
-        
+
         setIsLoading(false);
         return;
       }
@@ -243,7 +243,7 @@ export function LoginForm() {
       sessionStorage.setItem("just_logged_in", "true");
 
       setSession(data.id, data.email, data.name);
-      
+
       router.push("/admin");
       router.refresh();
     } catch (err) {
@@ -284,7 +284,7 @@ export function LoginForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Global Error Alert */}
         {errorMessage && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-xs font-medium text-red-600 border border-red-100"
@@ -304,9 +304,8 @@ export function LoginForm() {
             type="email"
             placeholder="admin@linkhub.com"
             disabled={isLoading}
-            className={`rounded-xl bg-white px-3.5 py-5 text-sm shadow-xs transition-all focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black/10 ${
-              errors.email ? "border-red-500 focus-visible:ring-red-500/20" : "border-slate-200"
-            }`}
+            className={`rounded-xl bg-white px-3.5 py-5 text-sm shadow-xs transition-all focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black/10 ${errors.email ? "border-red-500 focus-visible:ring-red-500/20" : "border-slate-200"
+              }`}
             {...emailRegRest}
             ref={(e) => {
               emailRegRef(e);
@@ -331,9 +330,8 @@ export function LoginForm() {
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               disabled={isLoading}
-              className={`rounded-xl bg-white pl-3.5 pr-10 py-5 text-sm shadow-xs transition-all focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black/10 ${
-                errors.password ? "border-red-500 focus-visible:ring-red-500/20" : "border-slate-200"
-              }`}
+              className={`rounded-xl bg-white pl-3.5 pr-10 py-5 text-sm shadow-xs transition-all focus-visible:border-black focus-visible:ring-1 focus-visible:ring-black/10 ${errors.password ? "border-red-500 focus-visible:ring-red-500/20" : "border-slate-200"
+                }`}
               {...passwordRegRest}
               ref={(e) => {
                 passwordRegRef(e);

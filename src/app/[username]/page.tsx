@@ -54,7 +54,7 @@ export default async function UserBioLinkPage({ params }: PageProps) {
   // 1. Fetch Profile on the server with optimized columns selection
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, user_id, username, fullname, bio, avatar_url, whatsapp_number, location, instagram_url, tiktok_url, facebook_url, views_count")
+    .select("id, user_id, username, fullname, bio, avatar_url, cover_url, whatsapp_number, location, instagram_url, tiktok_url, facebook_url, views_count")
     .eq("username", lowerUsername)
     .maybeSingle();
 
