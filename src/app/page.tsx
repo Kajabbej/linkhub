@@ -25,8 +25,8 @@ export default function Home() {
             LinkHub
           </span>
         </div>
-        <Link href="/login" className="inline-flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 px-5 py-2.5 text-sm font-semibold text-white border border-white/10 transition-all backdrop-blur-md">
-          Masuk Admin
+        <Link href="/budistore" className="inline-flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 px-5 py-2.5 text-sm font-semibold text-white border border-white/10 transition-all backdrop-blur-md">
+          Lihat Bio-Link
         </Link>
       </header>
 
@@ -71,8 +71,8 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
           >
-            <Link href="/login" className="flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/35 hover:scale-[1.02] active:scale-[0.98]">
-              Kelola Link Sekarang
+            <Link href="/budistore" className="flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/35 hover:scale-[1.02] active:scale-[0.98]">
+              Lihat Tautan Kami
               <ArrowRight size={18} />
             </Link>
             <a
@@ -203,8 +203,6 @@ export default function Home() {
             <span>&copy; {new Date().getFullYear()} LinkHub. All rights reserved.</span>
           </div>
           <div className="flex gap-4">
-            <Link href="/login" className="hover:text-slate-300 transition-colors">Admin Login</Link>
-            <span className="text-slate-800">|</span>
             <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">Powered by Next.js</a>
           </div>
         </div>

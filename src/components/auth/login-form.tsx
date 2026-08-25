@@ -158,7 +158,7 @@ export function LoginForm() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/login`
+          redirectTo: `${window.location.origin}/masuk-admin-rahasia`
         }
       });
       if (error) throw error;

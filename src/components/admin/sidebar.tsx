@@ -48,7 +48,7 @@ export function Sidebar() {
       console.error("Gagal melakukan sign out dari Supabase:", err);
     }
     clearSession();
-    router.push("/login");
+    router.push("/masuk-admin-rahasia");
     router.refresh();
   };
 

@@ -8,14 +8,20 @@ export function middleware(request: NextRequest) {
   // Protect all /admin routes
   if (pathname.startsWith("/admin")) {
     if (!session) {
-      // Redirect to login if no session cookie exists
-      const loginUrl = new URL("/login", request.url);
-      return NextResponse.redirect(loginUrl);
+      // Rewrite to /not-found to simulate a 404 Not Found error page
+      const notFoundUrl = new URL("/not-found", request.url);
+      return NextResponse.rewrite(notFoundUrl);
     }
   }
 
-  // Redirect logged-in users away from /login to /admin
+  // Rewrite /login directly to 404 since it is disabled
   if (pathname === "/login") {
+    const notFoundUrl = new URL("/not-found", request.url);
+    return NextResponse.rewrite(notFoundUrl);
+  }
+
+  // Redirect logged-in users away from secret login to /admin
+  if (pathname === "/masuk-admin-rahasia") {
     if (session) {
       const adminUrl = new URL("/admin", request.url);
       return NextResponse.redirect(adminUrl);
@@ -27,5 +33,5 @@ export function middleware(request: NextRequest) {
 
 // Config to specify which paths this middleware runs on
 export const config = {
-  matcher: ["/admin/:path*", "/login"],
+  matcher: ["/admin/:path*", "/login", "/masuk-admin-rahasia"],
 };

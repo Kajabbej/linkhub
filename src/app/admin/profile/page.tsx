@@ -211,7 +211,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const user = getAdminUser();
     if (!user) {
-      router.push("/login");
+      router.push("/masuk-admin-rahasia");
       return;
     }
     setUserId(user.id);
