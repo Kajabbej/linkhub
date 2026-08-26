@@ -348,13 +348,11 @@ export function UserBioClient({
       {/* Cover Photo — full width, sits above the card */}
       {profile.cover_url && (
         <div className="relative w-full max-w-[430px] h-[160px] md:h-[200px] overflow-hidden rounded-b-[32px] shrink-0">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={profile.cover_url}
             alt={`Foto sampul ${profile.username}`}
-            fill
-            sizes="430px"
-            priority
-            className="object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
           {/* Bottom fade for smooth card overlap */}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#090d16] to-transparent" />

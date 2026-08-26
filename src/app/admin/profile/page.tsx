@@ -290,7 +290,7 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle cover upload: validate → compress → upload to Supabase Storage → save URL
+  // Handle cover upload: validate → compress (skip for GIF) → upload to Supabase Storage → save URL
   const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
@@ -307,18 +307,34 @@ export default function ProfilePage() {
     setIsUploadingCover(true);
     setErrorMessage(null);
     try {
-      const blob = await compressImageToBlob(file, { maxWidth: 1000, maxHeight: 400, quality: 0.8 });
-
       // Gunakan Supabase Auth UID (auth.uid()) untuk path — harus cocok dengan RLS policy
       const { data: { session } } = await supabase.auth.getSession();
       const authUid = session?.user?.id;
       if (!authUid) throw new Error("Sesi Google tidak ditemukan. Coba login ulang.");
 
-      const filePath = `${authUid}/cover-${Date.now()}.jpg`;
+      const isGif = file.type === "image/gif";
+
+      let uploadBlob: Blob;
+      let contentType: string;
+      let ext: string;
+
+      if (isGif) {
+        // GIF: upload langsung tanpa kompresi agar animasi tetap berjalan
+        uploadBlob = file;
+        contentType = "image/gif";
+        ext = "gif";
+      } else {
+        // Gambar biasa: kompresi via Canvas
+        uploadBlob = await compressImageToBlob(file, { maxWidth: 1000, maxHeight: 400, quality: 0.8 });
+        contentType = "image/jpeg";
+        ext = "jpg";
+      }
+
+      const filePath = `${authUid}/cover-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("covers")
-        .upload(filePath, blob, { contentType: "image/jpeg", upsert: true });
+        .upload(filePath, uploadBlob, { contentType, upsert: true });
 
       if (uploadError) throw uploadError;
 
@@ -480,12 +496,11 @@ export default function ProfilePage() {
                 </h3>
                 <div className="relative w-full aspect-[21/8] rounded-xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 group">
                   {coverUrl ? (
-                    <Image
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={coverUrl}
                       alt="Cover Preview"
-                      fill
-                      sizes="600px"
-                      className="object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-slate-400">
@@ -498,7 +513,7 @@ export default function ProfilePage() {
                     <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 shadow-sm">
                       {isUploadingCover ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
                       {isUploadingCover ? "Mengunggah..." : "Unggah Sampul"}
-                      <input type="file" accept="image/*" onChange={handleCoverChange} className="hidden" disabled={isUploadingCover} />
+                      <input type="file" accept="image/*,image/gif" onChange={handleCoverChange} className="hidden" disabled={isUploadingCover} />
                     </label>
                     {coverUrl && (
                       <button
@@ -513,7 +528,7 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">Gambar akan dikompresi ke ukuran optimal (~1000×400px). Maks 10MB.</p>
+                <p className="text-xs text-muted-foreground">Mendukung GIF animasi loop. Gambar biasa dikompresi ke ~1000×400px. Maks 10MB.</p>
               </div>
 
               {/* Avatar Upload */}
@@ -735,13 +750,11 @@ export default function ProfilePage() {
               {/* Cover Photo Mockup */}
               <div className="relative w-full h-[90px] shrink-0 overflow-hidden">
                 {coverUrl ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={coverUrl}
                     alt="Cover Mockup"
-                    fill
-                    sizes="295px"
-                    className="object-cover"
-                    unoptimized
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50" />
