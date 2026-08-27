@@ -4,14 +4,18 @@
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS cover_url TEXT;
 
 
--- 1. Add missing columns to the links table
+-- 1. Add missing columns to the links table & update icon column to TEXT to support 1:1 image upload URLs
 ALTER TABLE links 
 ADD COLUMN IF NOT EXISTS description VARCHAR(255),
-ADD COLUMN IF NOT EXISTS icon VARCHAR(50),
+ADD COLUMN IF NOT EXISTS icon TEXT,
 ADD COLUMN IF NOT EXISTS badge VARCHAR(20),
 ADD COLUMN IF NOT EXISTS click_count INTEGER DEFAULT 0,
 ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'Social Media',
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now());
+
+-- Update column type if icon was previously created as VARCHAR(50)
+ALTER TABLE links ALTER COLUMN icon TYPE TEXT;
+
 
 -- 2. Optional: Create function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()

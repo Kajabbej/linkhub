@@ -18,6 +18,8 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { DynamicIcon } from "./dynamic-icon";
 import { AVAILABLE_ICONS } from "./add-link-modal";
 
+import { LinkIconPicker } from "./link-icon-picker";
+
 // Form validation schema
 const linkSchema = zod.object({
   title: zod.string()
@@ -32,7 +34,7 @@ const linkSchema = zod.object({
     .url("Format URL tidak valid (harus diawali http:// atau https://)"),
   category: zod.enum(["Social Media", "Affiliate", "Marketplace", "Portfolio", "Contact"]),
   badge: zod.string().optional().or(zod.literal("")),
-  icon: zod.string().min(1, "Icon wajib dipilih"),
+  icon: zod.string().min(1, "Icon wajib dipilih atau diunggah"),
 });
 
 type LinkFormValues = zod.infer<typeof linkSchema>;
@@ -95,7 +97,7 @@ export function EditLinkModal({ isOpen, onClose, onSuccess, link }: EditLinkModa
 
   const handleIconSelect = (iconName: string) => {
     setSelectedIcon(iconName);
-    setValue("icon", iconName);
+    setValue("icon", iconName, { shouldValidate: true });
   };
 
   const onSubmit = async (values: LinkFormValues) => {
@@ -136,7 +138,7 @@ export function EditLinkModal({ isOpen, onClose, onSuccess, link }: EditLinkModa
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px] rounded-3xl bg-white/95 backdrop-blur-xl border border-black/5 shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/5 text-black mb-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black/5 text-black mb-2 overflow-hidden">
             <DynamicIcon name={selectedIcon} size={20} />
           </div>
           <DialogTitle className="text-xl font-bold text-slate-900">Edit Link</DialogTitle>
@@ -153,27 +155,15 @@ export function EditLinkModal({ isOpen, onClose, onSuccess, link }: EditLinkModa
             </div>
           )}
 
-          {/* Icon Picker */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-slate-700">Pilih Icon</Label>
-            <div className="grid grid-cols-7 gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 max-h-[140px] overflow-y-auto">
-              {AVAILABLE_ICONS.map((iconName) => (
-                <button
-                  key={iconName}
-                  type="button"
-                  onClick={() => handleIconSelect(iconName)}
-                  className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-all ${
-                    selectedIcon === iconName 
-                      ? "bg-black text-white scale-105 shadow-sm" 
-                      : "bg-white border border-slate-100 text-slate-600 hover:bg-slate-100"
-                  }`}
-                  title={iconName}
-                >
-                  <DynamicIcon name={iconName} size={18} />
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Icon Picker (Supports 1:1 Image Upload & Preset Icons) */}
+          <LinkIconPicker
+            value={selectedIcon}
+            onChange={handleIconSelect}
+            disabled={isLoading}
+          />
+          {errors.icon && (
+            <p className="text-xs font-medium text-red-500">{errors.icon.message}</p>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             {/* Category Select */}
