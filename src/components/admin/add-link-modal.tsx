@@ -176,13 +176,14 @@ export function AddLinkModal({ isOpen, onClose, onSuccess }: AddLinkModalProps) 
           <div className="grid grid-cols-2 gap-3">
             {/* Category Select */}
             <div className="space-y-1.5">
-              <Label htmlFor="category" className="text-xs font-semibold text-slate-700">
-                Kategori
+              <Label htmlFor="category" className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                <span>Kategori</span>
+                <span className="text-[10px] font-bold text-emerald-600 font-['Lato',sans-serif] uppercase tracking-wider">Font: Lato</span>
               </Label>
               <select
                 id="category"
                 disabled={isLoading}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-black focus:ring-1 focus:ring-black/10 outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-['Lato',sans-serif] font-bold text-slate-800 focus:border-black focus:ring-1 focus:ring-black/10 outline-none"
                 {...register("category")}
               >
                 <option value="Social Media">Social Media</option>
@@ -195,13 +196,14 @@ export function AddLinkModal({ isOpen, onClose, onSuccess }: AddLinkModalProps) 
 
             {/* Badge Select */}
             <div className="space-y-1.5">
-              <Label htmlFor="badge" className="text-xs font-semibold text-slate-700">
-                Badge <span className="text-muted-foreground font-normal">(Opsional)</span>
+              <Label htmlFor="badge" className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                <span>Badge <span className="text-muted-foreground font-normal">(Opsional)</span></span>
+                <span className="text-[10px] font-black text-sky-500 tracking-wider">Font: Shine</span>
               </Label>
               <select
                 id="badge"
                 disabled={isLoading}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-black focus:ring-1 focus:ring-black/10 outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-black text-slate-800 focus:border-black focus:ring-1 focus:ring-black/10 outline-none"
                 {...register("badge")}
               >
                 <option value="">Tidak ada</option>

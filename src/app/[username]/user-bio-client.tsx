@@ -279,23 +279,23 @@ export function UserBioClient({
 
   const getBadgeStyle = (badgeName: string) => {
     switch (badgeName) {
-      case "NEW": return "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]";
-      case "HOT": return "bg-gradient-to-r from-rose-500 to-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.4)] animate-pulse";
-      case "PROMO": return "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.4)]";
-      case "BEST": return "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]";
-      default: return "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]";
+      case "NEW": return "shine-font-new";
+      case "HOT": return "shine-font-hot";
+      case "PROMO": return "shine-font-promo";
+      case "BEST": return "shine-font-best";
+      default: return "shine-font-new";
     }
   };
 
-  // Category customized tags
+  // Category customized tags - Pure text only in Lato font, no shape background
   const getCategoryTagStyle = (category: string) => {
     switch (category) {
-      case "Social Media": return "bg-blue-500/10 text-blue-300 border-blue-500/20";
-      case "Affiliate": return "bg-amber-500/10 text-amber-300 border-amber-500/20";
-      case "Marketplace": return "bg-emerald-500/10 text-emerald-300 border-emerald-500/20";
-      case "Portfolio": return "bg-pink-500/10 text-pink-300 border-pink-500/20";
-      case "Contact": return "bg-teal-500/10 text-teal-300 border-teal-500/20";
-      default: return "bg-purple-500/10 text-purple-300 border-purple-500/20";
+      case "Social Media": return "text-blue-400 font-['Lato',sans-serif] font-bold";
+      case "Affiliate": return "text-amber-400 font-['Lato',sans-serif] font-bold";
+      case "Marketplace": return "text-emerald-400 font-['Lato',sans-serif] font-bold";
+      case "Portfolio": return "text-pink-400 font-['Lato',sans-serif] font-bold";
+      case "Contact": return "text-teal-400 font-['Lato',sans-serif] font-bold";
+      default: return "text-purple-400 font-['Lato',sans-serif] font-bold";
     }
   };
 
@@ -665,17 +665,17 @@ export function UserBioClient({
                     </p>
                   )}
 
-                  {/* Category Pill tag */}
+                  {/* Category Tag - Pure text font Lato, no background shape */}
                   {link.category && (
-                    <span className={`inline-flex items-center mt-1.5 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${getCategoryTagStyle(link.category)}`}>
+                    <span className={`inline-block mt-1.5 text-[10px] uppercase tracking-wider ${getCategoryTagStyle(link.category)}`}>
                       {link.category}
                     </span>
                   )}
                 </div>
 
-                {/* Badge Overlay */}
+                {/* Badge Overlay - Pure shine font text, no background shape */}
                 {link.badge && (
-                  <span className={`absolute top-3 right-3 inline-flex px-1.8 py-0.5 text-[8px] font-black uppercase rounded-md tracking-wider ${getBadgeStyle(link.badge)}`}>
+                  <span className={`absolute top-3.5 right-4 text-[10px] uppercase tracking-widest ${getBadgeStyle(link.badge)}`}>
                     {link.badge}
                   </span>
                 )}

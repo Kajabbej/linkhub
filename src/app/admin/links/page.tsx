@@ -348,11 +348,11 @@ export default function LinksPage() {
 
   const getBadgeColor = (badgeName: string) => {
     switch (badgeName) {
-      case "NEW": return "bg-blue-50 text-blue-700 border-blue-200";
-      case "HOT": return "bg-red-50 text-red-700 border-red-200";
-      case "PROMO": return "bg-amber-50 text-amber-700 border-amber-200";
-      case "BEST": return "bg-emerald-50 text-emerald-700 border-emerald-200";
-      default: return "bg-slate-50 text-slate-700 border-slate-200";
+      case "NEW": return "shine-font-new";
+      case "HOT": return "shine-font-hot";
+      case "PROMO": return "shine-font-promo";
+      case "BEST": return "shine-font-best";
+      default: return "shine-font-new";
     }
   };
 
@@ -520,9 +520,9 @@ export default function LinksPage() {
                               {link.title}
                             </h3>
 
-                            {/* Badge display */}
+                            {/* Badge display - Pure shine font text, no box */}
                             {link.badge && (
-                              <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold uppercase rounded-md border ${getBadgeColor(link.badge)}`}>
+                              <span className={`inline-flex text-[11px] uppercase tracking-wider ${getBadgeColor(link.badge)}`}>
                                 {link.badge}
                               </span>
                             )}
@@ -535,7 +535,7 @@ export default function LinksPage() {
                             </p>
                           )}
 
-                          {/* URL info */}
+                          {/* URL info & Category Tag */}
                           <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                             <a
                               href={link.url}
@@ -547,7 +547,8 @@ export default function LinksPage() {
                               <ExternalLink size={10} className="shrink-0" />
                             </a>
 
-                            <span className="text-[10px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                            {/* Category - Pure text in Lato font, no shape background */}
+                            <span className="text-[11px] font-['Lato',sans-serif] font-bold text-emerald-600 uppercase tracking-wider">
                               {link.category}
                             </span>
                           </div>

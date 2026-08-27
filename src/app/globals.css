@@ -1,8 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,400;1,700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+
+.font-lato {
+  font-family: 'Lato', sans-serif;
+}
+
+@keyframes font-shine-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.9));
+    opacity: 1;
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(56, 189, 248, 1));
+    opacity: 0.85;
+  }
+}
+
+.shine-font-new {
+  font-family: 'Lato', sans-serif;
+  font-weight: 900;
+  background: linear-gradient(135deg, #38bdf8 0%, #e0f2fe 50%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: font-shine-glow 2s infinite ease-in-out;
+  letter-spacing: 0.12em;
+}
+
+.shine-font-hot {
+  font-family: 'Lato', sans-serif;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fb7185 0%, #ffe4e6 50%, #e11d48 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: font-shine-glow 2s infinite ease-in-out;
+  letter-spacing: 0.12em;
+}
+
+.shine-font-promo {
+  font-family: 'Lato', sans-serif;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fbbf24 0%, #fef3c7 50%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: font-shine-glow 2s infinite ease-in-out;
+  letter-spacing: 0.12em;
+}
+
+.shine-font-best {
+  font-family: 'Lato', sans-serif;
+  font-weight: 900;
+  background: linear-gradient(135deg, #34d399 0%, #d1fae5 50%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: font-shine-glow 2s infinite ease-in-out;
+  letter-spacing: 0.12em;
+}
 
 @theme inline {
   --color-background: var(--background);
