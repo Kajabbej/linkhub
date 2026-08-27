@@ -126,9 +126,13 @@ export function EditLinkModal({ isOpen, onClose, onSuccess, link }: EditLinkModa
       // Success
       onSuccess();
       onClose();
-    } catch (err) {
-      console.error(err);
-      setErrorMessage("Gagal memperbarui link. Pastikan Anda sudah menjalankan SQL schema update di Supabase editor.");
+    } catch (err: any) {
+      console.error("Error updating link:", err);
+      setErrorMessage(
+        err?.message
+          ? `Gagal memperbarui link: ${err.message}`
+          : "Gagal memperbarui link. Pastikan Anda sudah menjalankan SQL schema update di Supabase editor."
+      );
     } finally {
       setIsLoading(false);
     }

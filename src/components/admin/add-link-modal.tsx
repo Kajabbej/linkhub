@@ -130,9 +130,13 @@ export function AddLinkModal({ isOpen, onClose, onSuccess }: AddLinkModalProps) 
       setSelectedIcon("Link");
       onSuccess();
       onClose();
-    } catch (err) {
-      console.error(err);
-      setErrorMessage("Gagal menyimpan link. Pastikan Anda sudah menjalankan SQL schema update di Supabase editor.");
+    } catch (err: any) {
+      console.error("Error adding link:", err);
+      setErrorMessage(
+        err?.message
+          ? `Gagal menyimpan link: ${err.message}`
+          : "Gagal menyimpan link. Pastikan Anda sudah menjalankan SQL schema update di Supabase editor."
+      );
     } finally {
       setIsLoading(false);
     }
