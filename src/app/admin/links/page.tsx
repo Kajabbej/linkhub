@@ -509,7 +509,7 @@ export default function LinksPage() {
                         <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${link.is_active ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-slate-300"}`} />
 
                         {/* Icon */}
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 border border-slate-100 text-slate-800 shadow-inner">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 border border-slate-100 text-slate-800 shadow-inner overflow-hidden">
                           <DynamicIcon name={link.icon || "Link"} size={22} />
                         </div>
 

@@ -26,8 +26,7 @@ export function DynamicIcon({ name, size = 20, className = "" }: DynamicIconProp
       <img
         src={name}
         alt="Icon"
-        style={{ width: size, height: size }}
-        className={`aspect-square object-cover rounded-lg shrink-0 ${className}`}
+        className={`w-full h-full aspect-square object-cover shrink-0 ${className}`}
       />
     );
   }

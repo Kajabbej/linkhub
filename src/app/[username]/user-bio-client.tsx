@@ -647,7 +647,7 @@ export function UserBioClient({
                 <div className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-purple-500/0 to-transparent group-hover:via-purple-500/50 transition-all duration-500" />
 
                 {/* Icon wrapper with hover glow */}
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-white shadow-inner group-hover:bg-purple-600/20 group-hover:text-purple-300 transition-all duration-300 group-hover:shadow-[0_0_12px_rgba(168,85,247,0.3)]">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] text-white shadow-inner group-hover:bg-purple-600/20 group-hover:text-purple-300 transition-all duration-300 group-hover:shadow-[0_0_12px_rgba(168,85,247,0.3)] overflow-hidden">
                   <DynamicIcon name={link.icon || "Link"} size={20} />
                 </div>
 

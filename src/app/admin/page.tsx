@@ -289,7 +289,7 @@ export default function AdminDashboard() {
                   {links.map((link) => (
                     <div key={link.id} className="group flex items-center justify-between">
                       <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/5 text-black">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/5 text-black overflow-hidden">
                           <DynamicIcon name={link.icon || "Link"} size={18} />
                         </div>
                         <div className="overflow-hidden">
