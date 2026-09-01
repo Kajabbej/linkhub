@@ -172,14 +172,13 @@ export function LoginForm() {
     const { browser, device } = getBrowserAndDevice();
 
     try {
-      const { data, error } = await supabase
-        .from("users")
-        .select("id, name, email, role")
-        .eq("email", values.email)
-        .eq("password", values.password)
-        .maybeSingle();
+      // 1. Verifikasi login via Supabase Auth (password di-hash, aman)
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
 
-      if (error || !data) {
+      if (authError || !authData.user) {
         triggerShake();
         setErrorMessage("Email atau password salah.");
 
@@ -196,6 +195,21 @@ export function LoginForm() {
         return;
       }
 
+      // 2. Ambil data profil user (name, role) dari tabel users
+      const { data, error } = await supabase
+        .from("users")
+        .select("id, name, email, role")
+        .eq("email", values.email)
+        .maybeSingle();
+
+      if (error || !data) {
+        triggerShake();
+        setErrorMessage("Akun tidak ditemukan di sistem.");
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        return;
+      }
+
       if (data.role !== "admin") {
         triggerShake();
         setErrorMessage("Akses ditolak. Anda bukan Admin.");
@@ -209,10 +223,12 @@ export function LoginForm() {
           status: "FAILED"
         });
 
+        await supabase.auth.signOut();
         setIsLoading(false);
         return;
       }
 
+      // 3. Log sukses & set session cookie
       await supabase.from("login_logs").insert({
         user_id: data.id,
         email: values.email,

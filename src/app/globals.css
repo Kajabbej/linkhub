@@ -24,6 +24,7 @@
   font-family: 'Lato', sans-serif;
   font-weight: 900;
   background: linear-gradient(135deg, #38bdf8 0%, #e0f2fe 50%, #0284c7 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: font-shine-glow 2s infinite ease-in-out;
@@ -34,6 +35,7 @@
   font-family: 'Lato', sans-serif;
   font-weight: 900;
   background: linear-gradient(135deg, #fb7185 0%, #ffe4e6 50%, #e11d48 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: font-shine-glow 2s infinite ease-in-out;
@@ -44,6 +46,7 @@
   font-family: 'Lato', sans-serif;
   font-weight: 900;
   background: linear-gradient(135deg, #fbbf24 0%, #fef3c7 50%, #d97706 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: font-shine-glow 2s infinite ease-in-out;
@@ -54,6 +57,7 @@
   font-family: 'Lato', sans-serif;
   font-weight: 900;
   background: linear-gradient(135deg, #34d399 0%, #d1fae5 50%, #059669 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: font-shine-glow 2s infinite ease-in-out;
